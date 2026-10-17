@@ -24,6 +24,17 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe tools/check_knowledge_graph.py
 ```
 
+On Windows, use a fresh repository-local pytest temp base when the shared
+system temp directory causes cleanup or permission failures:
+
+```powershell
+$pytestBase = Join-Path (Get-Location) ('.pytest-local-' + [guid]::NewGuid())
+python -m pytest -q --basetemp $pytestBase
+```
+
+See the [release-to-consumer runbook](docs/runbooks/release-to-consumer.md)
+for the versioned artifact and consumer validation handshake.
+
 The library is offline-first after its declared dependencies are installed.
 Tests use generated synthetic audio only. Do not add private samples, runtime
 audio, credentials, machine-specific paths, or model downloads.

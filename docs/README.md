@@ -12,4 +12,5 @@ scope: documentation
 - [Architecture boundary](../ARCHITECTURE.md)
 - [Contracts](contracts/README.md)
 - [Validation and release gates](validation/README.md)
+- [Release to consumer runbook](runbooks/release-to-consumer.md)
 - [Decision records](decisions/README.md)
