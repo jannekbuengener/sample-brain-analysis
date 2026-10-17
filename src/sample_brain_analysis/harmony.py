@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+import math
 from typing import Generic, Optional, Tuple, TypeVar
 
 from .bpm_matching import DEFAULT_BPM_TOLERANCE, _score_bpm_details
@@ -301,7 +302,7 @@ def find_harmony_matches(
     """Find harmony matches for a reference row against a list of candidates.
 
     Args:
-        reference: The reference HarmonyInput (must have BPM > 0).
+        reference: The reference HarmonyInput (must have finite BPM > 0).
         candidates: List of candidate HarmonyInputs (already loaded).
         query: Optional text filter applied to candidate display names.
         key_override: Optional in-memory key override for the reference only.
@@ -312,7 +313,11 @@ def find_harmony_matches(
         Tuple of (list of HarmonySuggestion, error message or None).
     """
     # Validate reference has BPM usable for matching
-    if reference.bpm is None or reference.bpm <= 0:
+    if (
+        reference.bpm is None
+        or not math.isfinite(reference.bpm)
+        or reference.bpm <= 0
+    ):
         return [], "Ähnliche Samples benötigen ein analysiertes BPM."
 
     # Apply key override in-memory (not persisted to reference row)
