@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sample-brain-analysis"
+version = "0.1.0"
+description = "Offline-first, application-independent analysis contracts and computation for Sample Brain."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "librosa==1.0.0",
+  "numpy>=2.5,<3",
+  "soundfile>=0.14,<0.15",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8,<10",
+  "PyYAML>=6,<7",
+  "ruff==0.16.0",
+  "setuptools>=69",
+  "wheel>=0.43",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+extend-exclude = [".pytest-*"]
+
+[tool.ruff.lint]
+# Match Sample Brain's deliberately narrow static-correctness gate for this
+# initial extraction; broader style cleanup is outside the frozen behavior slice.
+select = ["F63", "F7"]

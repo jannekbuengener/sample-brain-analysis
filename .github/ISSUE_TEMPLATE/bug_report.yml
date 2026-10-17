@@ -1,0 +1,22 @@
+name: Bug report
+description: Report a reproducible Analysis package defect.
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Observed and expected behavior
+      description: Include a minimal synthetic example where possible.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+    validations:
+      required: true
+  - type: textarea
+    id: checks
+    attributes:
+      label: Reproduction and checks
+    validations:
+      required: true

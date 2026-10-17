@@ -1,0 +1,35 @@
+name: Build and attach wheel
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+      - run: python -m pip install --upgrade pip build
+      - run: python -m pip install -e ".[dev]"
+      - run: python -m pytest -q
+      - run: python tools/check_knowledge_graph.py
+      - run: python -m build --wheel
+      - name: Verify tag matches package version
+        shell: bash
+        run: |
+          VERSION="$(python -c 'from importlib.metadata import metadata; print(metadata("sample-brain-analysis")["Version"])')"
+          test "${GITHUB_REF_NAME}" = "v${VERSION}"
+      - name: Attach wheel to GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/*.whl --verify-tag --title "$GITHUB_REF_NAME" --generate-notes
