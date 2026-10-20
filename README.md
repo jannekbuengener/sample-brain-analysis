@@ -1,18 +1,37 @@
 # Sample Brain Analysis
 
 Independent Python distribution `sample-brain-analysis`, imported as
-`sample_brain_analysis`. It owns a small, database-free analysis API extracted
-from Sample Brain. The library does not own catalog persistence, product
-orchestration, UI, or real-time audio.
+`sample_brain_analysis`. It owns the database-free Analysis API, contracts, and
+deterministic computation extracted from Sample Brain. It does not own catalog
+persistence, product orchestration, Workbench/QML/session state, AQ orchestration,
+or real-time audio.
 
-The source baseline for the initial extraction is Sample Brain `main` at
-`bd302c70084e481a1189f0aeddb2392273357d75`. Public names and owner modules are
-listed in [the v1 contract](docs/contracts/analysis-public-api-v1.md); module
-ownership and non-goals are in [the architecture](ARCHITECTURE.md).
+Public names and owner modules are listed in [the v1 contract](docs/contracts/analysis-public-api-v1.md);
+module ownership and non-goals are in [the architecture](ARCHITECTURE.md).
 
-This is the initial `0.1.0` distribution. No stable SemVer compatibility
-promise is made yet. Releases are versioned GitHub artifacts; no package index
-publication is configured.
+Package metadata is currently `0.1.1`; the latest published GitHub release is
+[`v0.1.1`](https://github.com/jannekbuengener/sample-brain-analysis/releases/tag/v0.1.1).
+No stable SemVer compatibility promise is made yet. Releases are versioned GitHub
+artifacts; no package index publication is configured.
+
+## Consumer relationship
+
+[`jannekbuengener/sample-brain`](https://github.com/jannekbuengener/sample-brain) is
+the product consumer. Consumer integration, persistence, Workbench/QML/session
+state, AQ orchestration, and product governance remain owned there.
+
+Compatibility is validated against the exact versioned release artifact. Do not
+treat a sibling checkout, editable install, `PYTHONPATH` source copy, or unversioned
+`main` as release evidence. Follow the [release-to-consumer runbook](docs/runbooks/release-to-consumer.md)
+and the Sample Brain [consumer contract](https://github.com/jannekbuengener/sample-brain/blob/main/docs/ANALYSIS_PUBLIC_CONTRACT_V1.md).
+
+## Documentation
+
+- [Architecture and ownership boundary](ARCHITECTURE.md)
+- [Documentation index](docs/README.md)
+- [Public Analysis API v1](docs/contracts/analysis-public-api-v1.md)
+- [Release to consumer runbook](docs/runbooks/release-to-consumer.md)
+- [Contributing](CONTRIBUTING.md)
 
 ## Local development
 
@@ -31,9 +50,6 @@ system temp directory causes cleanup or permission failures:
 $pytestBase = Join-Path (Get-Location) ('.pytest-local-' + [guid]::NewGuid())
 python -m pytest -q --basetemp $pytestBase
 ```
-
-See the [release-to-consumer runbook](docs/runbooks/release-to-consumer.md)
-for the versioned artifact and consumer validation handshake.
 
 The library is offline-first after its declared dependencies are installed.
 Tests use generated synthetic audio only. Do not add private samples, runtime
