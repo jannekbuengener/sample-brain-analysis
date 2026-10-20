@@ -13,4 +13,5 @@ scope: documentation
 - [Contracts](contracts/README.md)
 - [Validation and release gates](validation/README.md)
 - [Release to consumer runbook](runbooks/release-to-consumer.md)
+- [External technical references](external-docs/index.md)
 - [Decision records](decisions/README.md)
