@@ -205,7 +205,9 @@ def _extract_bpm_scalar(tempo) -> float | None:
 
 # Periodicity gates for sample-accurate onset-interval BPM (#1218 / analysis#18).
 # Relative MAD keeps stable periodic material; noise/non-periodic fails closed.
-_BPM_INTERVAL_MIN_COUNT = 8
+# At least 2 intervals (~3 events): covers short 2s loops at 120 BPM where
+# onset detect may miss one hit, while still rejecting single-coincidence noise.
+_BPM_INTERVAL_MIN_COUNT = 2
 _BPM_INTERVAL_REL_MAD_MAX = 0.05
 _BPM_INTERVAL_NEAR_MEDIAN_FRAC = 0.75
 _BPM_INTERVAL_NEAR_MEDIAN_REL = 0.05
@@ -292,9 +294,9 @@ def _estimate_bpm_from_onset_intervals(
 def _estimate_bpm(y: np.ndarray, sr: int) -> float | None:
     """Authoritative BPM from stable refined onset intervals; else None.
 
-    Coarse ``beat_track`` tempo bins are not used as a silent fallback: they
-    cannot meet #1218 hundredth-BPM accuracy and invent values on non-periodic
-    material. Callers may still apply ``normalize_bpm`` to a finite result.
+    Coarse ``beat_track`` tempo bins are not a silent fallback: they miss the
+    #1218 hundredth-BPM gate and invent values on non-periodic material.
+    Short but periodic loops are covered by a low interval-count floor (3).
     """
     return _estimate_bpm_from_onset_intervals(y, sr)
 
