@@ -203,6 +203,102 @@ def _extract_bpm_scalar(tempo) -> float | None:
     return scalar if scalar > 0 else None
 
 
+# Periodicity gates for sample-accurate onset-interval BPM (#1218 / analysis#18).
+# Relative MAD keeps stable periodic material; noise/non-periodic fails closed.
+_BPM_INTERVAL_MIN_COUNT = 8
+_BPM_INTERVAL_REL_MAD_MAX = 0.05
+_BPM_INTERVAL_NEAR_MEDIAN_FRAC = 0.75
+_BPM_INTERVAL_NEAR_MEDIAN_REL = 0.05
+_BPM_TEMPO_MIN = 40.0
+# Upper bound must include fast double-time material (e.g. 280 BPM traps);
+# merging below this floor would silently fold 280 → 140.
+_BPM_TEMPO_MAX = 320.0
+
+
+def _refine_onset_samples(
+    y: np.ndarray, sr: int, *, hop_length: int = ANALYZE_HOP_LENGTH
+) -> np.ndarray:
+    """Frame onsets refined to local energy maxima (sample-accurate peaks)."""
+    if y.size == 0 or sr <= 0:
+        return np.asarray([], dtype=np.int64)
+    frames = librosa.onset.onset_detect(
+        y=y, sr=sr, hop_length=hop_length, units="frames"
+    )
+    if frames is None or len(frames) == 0:
+        return np.asarray([], dtype=np.int64)
+    approx = librosa.frames_to_samples(frames, hop_length=hop_length)
+    energy = np.square(np.asarray(y, dtype=np.float64))
+    window = max(int(hop_length), 256)
+    refined: list[int] = []
+    n = int(energy.shape[0])
+    for sample in approx:
+        center = int(sample)
+        lo = max(0, center - window)
+        hi = min(n, center + window + 1)
+        if hi <= lo:
+            continue
+        refined.append(lo + int(np.argmax(energy[lo:hi])))
+    if not refined:
+        return np.asarray([], dtype=np.int64)
+    return np.unique(np.asarray(refined, dtype=np.int64))
+
+
+def _estimate_bpm_from_onset_intervals(
+    y: np.ndarray, sr: int, *, hop_length: int = ANALYZE_HOP_LENGTH
+) -> float | None:
+    """Estimate BPM from refined onset intervals when periodicity is stable.
+
+    Recovers hundredth-BPM resolution for clear periodic material where
+    ``librosa.beat.beat_track`` only returns coarse tempo-grid bins.
+    Returns ``None`` when periodicity is insufficient (honest abstention).
+    """
+    if y is None or sr is None or sr <= 0:
+        return None
+    onsets = _refine_onset_samples(y, sr, hop_length=hop_length)
+    if onsets.size < 2:
+        return None
+    lo_iv = max(1, int(sr * 60.0 / _BPM_TEMPO_MAX))
+    hi_iv = max(lo_iv, int(sr * 60.0 / _BPM_TEMPO_MIN))
+    # Merge sub-hit fragments within one event (e.g. long kick envelopes).
+    merged: list[int] = [int(onsets[0])]
+    for sample in onsets[1:]:
+        sample_i = int(sample)
+        if sample_i - merged[-1] >= lo_iv:
+            merged.append(sample_i)
+    if len(merged) < 2:
+        return None
+    intervals = np.diff(np.asarray(merged, dtype=np.int64))
+    intervals = intervals[(intervals >= lo_iv) & (intervals <= hi_iv)]
+    if intervals.size < _BPM_INTERVAL_MIN_COUNT:
+        return None
+    median_iv = float(np.median(intervals.astype(np.float64)))
+    if median_iv <= 0:
+        return None
+    mad = float(np.median(np.abs(intervals.astype(np.float64) - median_iv)))
+    rel_mad = mad / median_iv
+    if rel_mad > _BPM_INTERVAL_REL_MAD_MAX:
+        return None
+    near = np.abs(intervals.astype(np.float64) - median_iv) <= (
+        _BPM_INTERVAL_NEAR_MEDIAN_REL * median_iv
+    )
+    if float(np.mean(near)) < _BPM_INTERVAL_NEAR_MEDIAN_FRAC:
+        return None
+    bpm = 60.0 * float(sr) / median_iv
+    if not (_BPM_TEMPO_MIN <= bpm <= _BPM_TEMPO_MAX):
+        return None
+    return float(bpm)
+
+
+def _estimate_bpm(y: np.ndarray, sr: int) -> float | None:
+    """Authoritative BPM from stable refined onset intervals; else None.
+
+    Coarse ``beat_track`` tempo bins are not used as a silent fallback: they
+    cannot meet #1218 hundredth-BPM accuracy and invent values on non-periodic
+    material. Callers may still apply ``normalize_bpm`` to a finite result.
+    """
+    return _estimate_bpm_from_onset_intervals(y, sr)
+
+
 # Frozen techno/dancefloor domain contract (#872 / PIR after #869).
 # tol is half max adjacent librosa.tempo_frequencies spacing in [55, 85]
 # at ANALYZE_SR=44100 with beat_track hop=512 — not testset-tuned.
@@ -322,11 +418,7 @@ def _extract_features_with_loader(
         if short_clip:
             bpm = None
         else:
-            try:
-                tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
-                bpm = _extract_bpm_scalar(tempo)
-            except Exception:
-                bpm = None
+            bpm = _estimate_bpm(y, sr)
             bpm = normalize_bpm(bpm, mode=bpm_normalization)
 
         if short_clip:
