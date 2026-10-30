@@ -9,10 +9,11 @@ or real-time audio.
 Public names and owner modules are listed in [the v1 contract](docs/contracts/analysis-public-api-v1.md);
 module ownership and non-goals are in [the architecture](ARCHITECTURE.md).
 
-Package metadata is currently `0.1.1`; the latest published GitHub release is
-[`v0.1.1`](https://github.com/jannekbuengener/sample-brain-analysis/releases/tag/v0.1.1).
-No stable SemVer compatibility promise is made yet. Releases are versioned GitHub
-artifacts; no package index publication is configured.
+Package metadata is currently `0.1.2` (pending release after merge of the
+#1218 exact-tempo fix). The latest published GitHub release remains
+[`v0.1.1`](https://github.com/jannekbuengener/sample-brain-analysis/releases/tag/v0.1.1)
+until `v0.1.2` is tagged. No stable SemVer compatibility promise is made yet.
+Releases are versioned GitHub artifacts; no package index publication is configured.
 
 ## Consumer relationship
 
