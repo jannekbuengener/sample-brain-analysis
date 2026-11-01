@@ -1,5 +1,9 @@
 # Sample Brain Analysis
 
+[![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/jannekbuengener/badge.svg)](https://hub.xerj.org/contributors/jannekbuengener)
+
+**XERJ Corpus Hub:** submitted on 2026-11-01; the current review/live status is tracked on the [contributor page](https://hub.xerj.org/contributors/jannekbuengener).
+
 Independent Python distribution `sample-brain-analysis`, imported as
 `sample_brain_analysis`. It owns the database-free Analysis API, contracts, and
 deterministic computation extracted from Sample Brain. It does not own catalog
@@ -55,3 +59,9 @@ python -m pytest -q --basetemp $pytestBase
 The library is offline-first after its declared dependencies are installed.
 Tests use generated synthetic audio only. Do not add private samples, runtime
 audio, credentials, machine-specific paths, or model downloads.
+
+## Acknowledgements & Supporters
+
+This section recognizes people and projects that materially support discoverability, review, infrastructure, or development. It is intentionally open for future supporters and is not a sponsorship ledger.
+
+- **Ivan / [XERJ](https://xerj.org/)** — for selecting Sample Brain for the XERJ Corpus Hub and providing a public path for related repositories to become searchable reference material for AI coding agents. `sample-brain-analysis` was submitted on 2026-11-01; the [contributor page](https://hub.xerj.org/contributors/jannekbuengener) is the source for its current review/live status.
