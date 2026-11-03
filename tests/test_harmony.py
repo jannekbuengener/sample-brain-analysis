@@ -106,22 +106,25 @@ def test_finder_keeps_reference_exclusion_and_error_messages():
     matches, error = harmony.find_harmony_matches(ref, [ref, alias])
     assert matches == []
     assert error == "Keine weiteren geladenen Samples zum Vergleichen."
-    for bpm in (None, 0.0, -1.0):
-        matches, error = harmony.find_harmony_matches(replace(ref, bpm=bpm), [_input("cand")])
-        assert matches == []
-        assert error == "Ähnliche Samples benötigen ein analysiertes BPM."
 
 
-@pytest.mark.parametrize("bpm", [float("nan"), float("inf"), float("-inf")])
-def test_finder_rejects_non_finite_reference_bpm_before_ranking(bpm):
+@pytest.mark.parametrize("bpm", [None, 0.0, -1.0, float("nan"), float("inf"), float("-inf")])
+def test_finder_missing_or_invalid_reference_bpm_still_ranks_by_harmony(bpm):
+    """BPM is ranking-only; missing/invalid BPM must not block harmonic matches."""
     reference = replace(_input("ref"), bpm=bpm)
-    candidates = [_input("direct-key-match")]
+    candidate = _input("direct-key-match")
 
-    matches, error = harmony.find_harmony_matches(reference, candidates)
+    matches, error = harmony.find_harmony_matches(reference, [candidate])
 
-    assert matches == []
-    assert error == "Ähnliche Samples benötigen ein analysiertes BPM."
-    assert score_bpm_match(bpm, 128.0, 8.0) == 0.0
+    assert error is None
+    assert len(matches) == 1
+    assert matches[0].row is candidate
+    assert matches[0].relation is harmony.HarmonyRelation.DIRECT
+    assert matches[0].bpm_score == 0.0
+    assert matches[0].harmony_score == 1.0
+    assert matches[0].total_score == pytest.approx(0.75)
+    if bpm is not None:
+        assert score_bpm_match(bpm, 128.0, 8.0) == 0.0
 
 
 def test_finder_relation_score_name_path_and_stable_tie_order():

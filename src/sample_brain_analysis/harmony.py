@@ -302,7 +302,9 @@ def find_harmony_matches(
     """Find harmony matches for a reference row against a list of candidates.
 
     Args:
-        reference: The reference HarmonyInput (must have finite BPM > 0).
+        reference: The reference HarmonyInput. Key/mode eligibility is owned by
+            the product adapter; missing/invalid BPM only zeroes the BPM
+            ranking term (see ``rate_harmony``) and does not block matching.
         candidates: List of candidate HarmonyInputs (already loaded).
         query: Optional text filter applied to candidate display names.
         key_override: Optional in-memory key override for the reference only.
@@ -312,14 +314,6 @@ def find_harmony_matches(
     Returns:
         Tuple of (list of HarmonySuggestion, error message or None).
     """
-    # Validate reference has BPM usable for matching
-    if (
-        reference.bpm is None
-        or not math.isfinite(reference.bpm)
-        or reference.bpm <= 0
-    ):
-        return [], "Ähnliche Samples benötigen ein analysiertes BPM."
-
     # Apply key override in-memory (not persisted to reference row)
     results: list[HarmonySuggestion[HarmonyInput]] = []
 
